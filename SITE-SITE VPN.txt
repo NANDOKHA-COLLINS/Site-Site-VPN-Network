@@ -1,0 +1,57 @@
+1. IKE PHASE 1
+#########################################################################
+HQ R2
+
+access-list 130 permit ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share
+group 5
+exit
+crypto isakmp key cisco address 209.165.200.6
+
+BR-R3
+access-list 130 permit ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255 
+crypto isakmp policy 10
+encryption aes 256
+authentication pre-share
+group 5
+lifetime 86400
+exit
+crypto isakmp key cisco address 209.165.200.1
+####################################################################
+
+2. IKE PHASE 2
+HQ-R1
+
+crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+Crypto map VPN-MAP 10 ipsec-isakmp
+description THIS VPN CONNECTS TO BRANCH OFFICE
+set peer 209.165.200.6
+set transform-set VPN-SET
+match address 130
+
+BRANCH-R
+access-list 130 permit ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255 
+crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac
+Crypto map VPN-MAP 10 ipsec-isakmp
+description THIS VPN CONNECTS TO HQ OFFICE
+set peer 209.165.200.1
+set transform-set VPN-SET
+match address 130 
+
+3.CONFIGURE CRYPRO MAP ON OUTGOING INTERFACES
+HQ-R1
+
+interface Serial0/0/1
+crypto map VPN-MAP
+
+BRANCH -R1
+
+interface Serial0/0/0
+crypto map VPN-MAP
+
+################
+To verify SITE TO SITE VPNshow crypto ipsec sa 
+
+
